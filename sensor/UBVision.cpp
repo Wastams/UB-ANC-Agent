@@ -37,20 +37,23 @@ void UBVision::dataReadyEvent() {
         int bytes = m_data.indexOf(PACKET_END);
 
         char* data = m_data.left(bytes).data();
-        if (data[1]) {
-            if (!m_objs.contains(data[0])) {
-                m_objs.append(data[0]);
-                emit inVisualRange(data[0]);
+        quint8 id = data[0];
+        bool visible = data[1];
 
-                QLOG_INFO() << "Object Detected | ID: " << data[0];
+        if (visible) {
+            if (!m_objs.contains(id)) {
+                m_objs.append(id);
+                emit inVisualRange(id);
+
+                QLOG_INFO() << "Object Detected | ID: " << id;
             }
         }
         else {
-            if (m_objs.contains(data[0])) {
-                m_objs.removeAll(data[0]);
-                emit outVisualRange(data[0]);
+            if (m_objs.contains(id)) {
+                m_objs.removeAll(id);
+                emit outVisualRange(id);
 
-                QLOG_INFO() << "Object Out of Visual Range | ID: " << data[0];
+                QLOG_INFO() << "Object Out of Visual Range | ID: " << id;
             }
         }
 

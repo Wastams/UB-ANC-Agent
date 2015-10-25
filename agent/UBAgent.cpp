@@ -60,7 +60,7 @@ UBAgent::UBAgent(QObject *parent) : QObject(parent),
 void UBAgent::newUAVEvent(UASInterface* uav) {
     m_uav = dynamic_cast<ArduPilotMegaMAV*>(uav);
 
-    if (m_uav)
+    if (!m_uav)
         return;
 
 //    m_uav->setHeartbeatEnabled(true);
