@@ -9,15 +9,9 @@
 #include <QCoreApplication>
 
 UBNetwork::UBNetwork(QObject *parent) : QObject(parent),
-    m_size(0),
-    m_id(0)
+    m_id(0),
+    m_size(0)
 {
-    m_port = PHY_PORT;
-
-    int idx = QCoreApplication::arguments().indexOf("--port");
-    if (idx > 0)
-        m_port = (PHY_PORT - MAV_PORT) + QCoreApplication::arguments().at(idx + 1).toInt();
-
     m_socket = new QTcpSocket(this);
 
     connect(m_socket, SIGNAL(bytesWritten(qint64)), this, SLOT(dataSentEvent(qint64)));
@@ -30,8 +24,16 @@ UBNetwork::UBNetwork(QObject *parent) : QObject(parent),
     m_timer->setInterval(PHY_TRACK_RATE);
 
     connect(m_timer, SIGNAL(timeout()), this, SLOT(phyTracker()));
+}
 
-    m_timer->start();
+void UBNetwork::startNetwork(quint8 id, quint16 port) {
+    m_id = id;
+    m_socket->connectToHost(QHostAddress::LocalHost, port);
+}
+
+void UBNetwork::stopNetwork() {
+    m_timer->stop();
+    m_socket->disconnectFromHost();
 }
 
 void UBNetwork::sendData(quint8 desID, const QByteArray& data) {
@@ -98,21 +100,22 @@ void UBNetwork::dataReadyEvent() {
 }
 
 void UBNetwork::connectionEvent() {
-    QLOG_DEBUG() << "PHY Connected!";
+    m_timer->start();
+    QLOG_INFO() << "PHY Connected!";
 }
 
 void UBNetwork::disconnectEvent() {
+    m_timer->stop();
     QLOG_DEBUG() << "PHY Disconnected!";
 }
 
 void UBNetwork::errorEvent(QAbstractSocket::SocketError) {
-   QLOG_DEBUG() << "PHY ERROR: " << m_socket->errorString();
+    m_timer->stop();
+   QLOG_ERROR() << "PHY ERROR: " << m_socket->errorString();
 }
 
 void UBNetwork::phyTracker() {
-    if (m_socket->state() != QAbstractSocket::ConnectedState) {
-        m_socket->connectToHost(QHostAddress::LocalHost, m_port);
-    } else if (!m_send_buffer.isEmpty() && !m_size) {
+    if (!m_send_buffer.isEmpty() && !m_size) {
         QByteArray data(*m_send_buffer.first());
         data.append(PACKET_END);
         m_size = data.size();

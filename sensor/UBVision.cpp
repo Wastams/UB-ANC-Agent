@@ -9,12 +9,6 @@
 
 UBVision::UBVision(QObject *parent) : QObject(parent)
 {
-    m_port = SNR_PORT;
-
-    int idx = QCoreApplication::arguments().indexOf("--port");
-    if (idx > 0)
-        m_port = (SNR_PORT - MAV_PORT) + QCoreApplication::arguments().at(idx + 1).toInt();
-
     m_socket = new QTcpSocket(this);
 
     connect(m_socket, SIGNAL(connected()), this, SLOT(connectionEvent()));
@@ -26,8 +20,15 @@ UBVision::UBVision(QObject *parent) : QObject(parent)
     m_timer->setInterval(SNR_TRACK_RATE);
 
     connect(m_timer, SIGNAL(timeout()), this, SLOT(sensorTracker()));
+}
 
-    m_timer->start();
+void UBVision::startSensor(quint16 port) {
+    m_socket->connectToHost(QHostAddress::LocalHost, port);
+}
+
+void UBVision::stopSensor() {
+    m_timer->stop();
+    m_socket->disconnectFromHost();
 }
 
 void UBVision::dataReadyEvent() {
@@ -62,19 +63,22 @@ void UBVision::dataReadyEvent() {
 }
 
 void UBVision::connectionEvent() {
-    QLOG_DEBUG() << "Sensor Connected!";
+    m_timer->start();
+    QLOG_INFO() << "Sensor Connected!";
 }
 
 void UBVision::disconnectEvent() {
+    m_timer->stop();
     QLOG_DEBUG() << "Sensor Disconnected!";
 }
 
 void UBVision::errorEvent(QAbstractSocket::SocketError) {
-   QLOG_DEBUG() << "Sensor ERROR: " << m_socket->errorString();
+    m_timer->stop();
+    QLOG_ERROR() << "Sensor ERROR: " << m_socket->errorString();
 }
 
 void UBVision::sensorTracker() {
-    if (m_socket->state() != QAbstractSocket::ConnectedState) {
-        m_socket->connectToHost(QHostAddress::LocalHost, m_port);
-    }
+//    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+//        m_socket->connectToHost(QHostAddress::LocalHost, m_port);
+//    }
 }

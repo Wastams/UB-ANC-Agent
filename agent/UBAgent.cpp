@@ -16,6 +16,18 @@ UBAgent::UBAgent(QObject *parent) : QObject(parent),
     m_stage(STAGE_START),
     m_loiter_timer(0)
 {
+    m_msg.append(MAV_CMD_NAV_TAKEOFF);
+
+    m_net = new UBNetwork(this);
+    m_sensor = new UBVision(this);
+
+    m_timer = new QTimer(this);
+    m_timer->setInterval(MISSION_TRACK_RATE);
+
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(missionTracker()));
+}
+
+void UBAgent::startAgent() {
     int port = MAV_PORT;
 
     int idx = QCoreApplication::arguments().indexOf("--port");
@@ -26,51 +38,61 @@ UBAgent::UBAgent(QObject *parent) : QObject(parent),
 
 //    link = LinkManagerFactory::addSerialConnection(SERIAL_PORT, BAUD_RATE);
     link = LinkManagerFactory::addTcpConnection(QHostAddress::LocalHost, "", port, false);
-    if (!link)
+    if (!link) {
+        QLOG_FATAL() << "Agent was unable to connect to APM!";
         return;
+    }
 
     LinkManager::instance()->connectLink(link);
 
-    connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(newUAVEvent(UASInterface*)));
-
-    m_net = new UBNetwork(this);
-    m_msg.append(MAV_CMD_NAV_TAKEOFF);
-
-    m_vision = new UBVision(this);
-
-    m_timer = new QTimer(this);
-    m_timer->setInterval(MISSION_TRACK_RATE);
-
-    connect(m_timer, SIGNAL(timeout()), this, SLOT(missionTracker()));
+    connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(uavCreateEvent(UASInterface*)));
+    connect(UASManager::instance(), SIGNAL(UASDeleted(UASInterface*)), this, SLOT(uavDeleteEvent(UASInterface*)));
 }
 
-//void UBAgent::handleNewLink(int linkid) {
-//    if(LinkManager::instance()->getLinkType(linkid) != LinkInterface::SERIAL_LINK)
-//        return;
+void UBAgent::uavCreateEvent(UASInterface* uav) {
+    if (m_uav)
+        return;
 
-//    SerialLinkInterface* link = static_cast<SerialLinkInterface*>(LinkManager::instance()->getLink(linkid));
-
-//    link->setPortName("ttyACM0");
-//    link->setBaudRate(BAUD_RATE);
-//    link->connect();
-
-//    connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(handleNewUAV(UASInterface*)), Qt::UniqueConnection);
-//}
-
-void UBAgent::newUAVEvent(UASInterface* uav) {
     m_uav = dynamic_cast<ArduPilotMegaMAV*>(uav);
 
     if (!m_uav)
         return;
 
-//    m_uav->setHeartbeatEnabled(true);
-//    connect(m_uav, SIGNAL(heartbeatTimeout(bool, uint)), this, SLOT(handleHeartbeatTimeout(bool, uint)));
+    int port = MAV_PORT;
 
-    m_net->setSysID(m_uav->getUASID());
+    int idx = QCoreApplication::arguments().indexOf("--port");
+    if (idx > 0)
+        port = QCoreApplication::arguments().at(idx + 1).toInt();
+
+    m_net->startNetwork(m_uav->getUASID(), (PHY_PORT - MAV_PORT) + port);
+    m_sensor->startSensor((SNR_PORT - MAV_PORT) + port);
+
+    m_uav->setHeartbeatEnabled(true);
+    connect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
 
 //    QTimer::singleShot(START_DELAY, m_trackTimer, SLOT(start()));
 
     m_timer->start();
+}
+
+void UBAgent::uavDeleteEvent(UASInterface* uav) {
+    if (uav != m_uav)
+        return;
+
+    m_timer->stop();
+
+    m_net->stopNetwork();
+    m_sensor->stopSensor();
+
+    disconnect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
+    m_uav = NULL;
+}
+
+void UBAgent::heartbeatTimeoutEvent(bool timeout, uint ms) {
+    if (timeout)
+        QLOG_WARN() << "UAV connection lost! Millisecond: " << ms;
+    else
+        QLOG_INFO() << "UAV reconnected!";
 }
 
 void UBAgent::missionTracker() {
@@ -78,6 +100,9 @@ void UBAgent::missionTracker() {
 //        m_start_time++;
 //        return;
 //    }
+
+    if (!m_uav)
+        return;
 
     switch (m_stage) {
     case STAGE_START:

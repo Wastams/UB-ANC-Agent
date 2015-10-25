@@ -21,6 +21,8 @@ signals:
     void outVisualRange(quint8);
 
 public slots:
+    void startSensor(quint16 port);
+    void stopSensor();
 
 protected slots:
     void connectionEvent();
@@ -31,8 +33,6 @@ protected slots:
     void sensorTracker();
 
 private:
-    quint16 m_port;
-
     QTimer* m_timer;
     QByteArray m_data;
     QList<quint8> m_objs;

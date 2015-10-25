@@ -198,6 +198,7 @@ void QGCCore::initialize()
 //                                              tr("APM Planner has been upgraded from version %1 to version %2. Some of your user preferences have been reset to defaults for safety reasons. Please adjust them where needed.").arg(lastApplicationVersion).arg(QGC_APPLICATION_VERSION));
 
     UBAgent* agent = new UBAgent(this);
+    agent->startAgent();
 }
 
 /**

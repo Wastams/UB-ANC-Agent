@@ -22,14 +22,16 @@ signals:
     void dataReady();
 
 public slots:
-    void setSysID(quint8 id) {m_id = id;}
+    void startNetwork(quint8 id, quint16 port);
+    void stopNetwork();
+
     void sendData(quint8 desID, const QByteArray& data);
 
 protected slots:
     void connectionEvent();
     void disconnectEvent();
-    void dataSentEvent(qint64);
     void dataReadyEvent();
+    void dataSentEvent(qint64);
     void errorEvent(QAbstractSocket::SocketError);
 
     void phyTracker();
@@ -37,7 +39,6 @@ protected slots:
 private:
     quint8 m_id;
 
-    quint16 m_port;
     QTcpSocket* m_socket;
 
     qint64 m_size;

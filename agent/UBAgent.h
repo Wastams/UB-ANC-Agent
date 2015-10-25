@@ -17,16 +17,15 @@ class UBAgent : public QObject
 public:
     explicit UBAgent(QObject *parent = 0);
 
+public slots:
+    void startAgent();
+
 private:
     enum mission_stage {
         STAGE_START,
         STAGE_LOITER,
         STAGE_STOP
     } m_stage;
-
-private:
-    ArduPilotMegaMAV* m_uav;
-    int m_loiter_timer;
 
 private:
     void stageStart();
@@ -36,17 +35,24 @@ private:
 signals:
 
 protected slots:
-    void newUAVEvent(UASInterface *uav);
+    void uavCreateEvent(UASInterface *uav);
+    void uavDeleteEvent(UASInterface *uav);
+
+    void heartbeatTimeoutEvent(bool timeout, uint ms);
 
     void missionTracker();
 
-private:
+protected:
+    int m_loiter_timer;
+
     QTimer* m_timer;
 
     UBNetwork* m_net;
-    UBVision* m_vision;
+    UBVision* m_sensor;
 
     QByteArray m_msg;
+
+    ArduPilotMegaMAV* m_uav;
 };
 
 #endif // UBAGENT_H
