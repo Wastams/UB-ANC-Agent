@@ -397,8 +397,8 @@ void UASWaypointManager::addWaypointEditable(Waypoint *wp, bool enforceFirstActi
     if (wp)
     {
         // Check if this is the first waypoint in an offline list
-//        if (waypointsEditable.count() == 0 && uas == NULL)
-//            MainWindow::instance()->showCriticalMessage(tr("OFFLINE Waypoint Editing Mode"), tr("You are in offline editing mode. Make sure to save your mission to a file before connecting to a system - you will need to load the file into the system, the offline list will be cleared on connect."));
+        if (waypointsEditable.count() == 0 && uas == NULL)
+            ; //MainWindow::instance()->showCriticalMessage(tr("OFFLINE Waypoint Editing Mode"), tr("You are in offline editing mode. Make sure to save your mission to a file before connecting to a system - you will need to load the file into the system, the offline list will be cleared on connect."));
 
         wp->setId(waypointsEditable.count());
         if (enforceFirstActive && waypointsEditable.count() == 0)
@@ -420,8 +420,8 @@ void UASWaypointManager::addWaypointEditable(Waypoint *wp, bool enforceFirstActi
 Waypoint* UASWaypointManager::createWaypoint(bool enforceFirstActive)
 {
     // Check if this is the first waypoint in an offline list
-//    if (waypointsEditable.count() == 0 && uas == NULL)
-//        MainWindow::instance()->showCriticalMessage(tr("OFFLINE Waypoint Editing Mode"), tr("You are in offline editing mode. Make sure to save your mission to a file before connecting to a system - you will need to load the file into the system, the offline list will be cleared on connect."));
+    if (waypointsEditable.count() == 0 && uas == NULL)
+        ; //MainWindow::instance()->showCriticalMessage(tr("OFFLINE Waypoint Editing Mode"), tr("You are in offline editing mode. Make sure to save your mission to a file before connecting to a system - you will need to load the file into the system, the offline list will be cleared on connect."));
 
     Waypoint* wp = new Waypoint();
     wp->setId(waypointsEditable.count());
