@@ -1,9 +1,9 @@
 #ifndef UBVISION_H
 #define UBVISION_H
 
-#include <QHostAddress>
-#include <QByteArray>
 #include <QList>
+#include <QObject>
+#include <QByteArray>
 
 class QTimer;
 class QTcpSocket;
@@ -22,13 +22,10 @@ signals:
 
 public slots:
     void startSensor(quint16 port);
-    void stopSensor();
 
 protected slots:
     void connectionEvent();
-    void disconnectEvent();
     void dataReadyEvent();
-    void errorEvent(QAbstractSocket::SocketError);
 
     void sensorTracker();
 

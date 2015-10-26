@@ -38,15 +38,10 @@ void UBAgent::startAgent() {
 
 //    link = LinkManagerFactory::addSerialConnection(SERIAL_PORT, BAUD_RATE);
     link = LinkManagerFactory::addTcpConnection(QHostAddress::LocalHost, "", port, false);
-    if (!link) {
-        QLOG_FATAL() << "Agent was unable to connect to APM!";
-        return;
-    }
 
     LinkManager::instance()->connectLink(link);
 
     connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(uavCreateEvent(UASInterface*)));
-    connect(UASManager::instance(), SIGNAL(UASDeleted(UASInterface*)), this, SLOT(uavDeleteEvent(UASInterface*)));
 }
 
 void UBAgent::uavCreateEvent(UASInterface* uav) {
@@ -73,19 +68,6 @@ void UBAgent::uavCreateEvent(UASInterface* uav) {
 //    QTimer::singleShot(START_DELAY, m_trackTimer, SLOT(start()));
 
     m_timer->start();
-}
-
-void UBAgent::uavDeleteEvent(UASInterface* uav) {
-    if (uav != m_uav)
-        return;
-
-    m_timer->stop();
-
-    m_net->stopNetwork();
-    m_sensor->stopSensor();
-
-    disconnect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
-    m_uav = NULL;
 }
 
 void UBAgent::heartbeatTimeoutEvent(bool timeout, uint ms) {

@@ -5,15 +5,13 @@
 
 #include <QTimer>
 #include <QTcpSocket>
-#include <QCoreApplication>
+#include <QHostAddress>
 
 UBVision::UBVision(QObject *parent) : QObject(parent)
 {
     m_socket = new QTcpSocket(this);
 
     connect(m_socket, SIGNAL(connected()), this, SLOT(connectionEvent()));
-    connect(m_socket, SIGNAL(disconnected()), this, SLOT(disconnectEvent()));
-    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(errorEvent(QAbstractSocket::SocketError)));
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(dataReadyEvent()));
 
     m_timer = new QTimer(this);
@@ -24,11 +22,6 @@ UBVision::UBVision(QObject *parent) : QObject(parent)
 
 void UBVision::startSensor(quint16 port) {
     m_socket->connectToHost(QHostAddress::LocalHost, port);
-}
-
-void UBVision::stopSensor() {
-    m_timer->stop();
-    m_socket->disconnectFromHost();
 }
 
 void UBVision::dataReadyEvent() {
@@ -65,16 +58,6 @@ void UBVision::dataReadyEvent() {
 void UBVision::connectionEvent() {
     m_timer->start();
     QLOG_INFO() << "Sensor Connected!";
-}
-
-void UBVision::disconnectEvent() {
-    m_timer->stop();
-    QLOG_DEBUG() << "Sensor Disconnected!";
-}
-
-void UBVision::errorEvent(QAbstractSocket::SocketError) {
-    m_timer->stop();
-    QLOG_ERROR() << "Sensor ERROR: " << m_socket->errorString();
 }
 
 void UBVision::sensorTracker() {

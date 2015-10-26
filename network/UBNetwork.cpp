@@ -6,7 +6,7 @@
 
 #include <QTimer>
 #include <QTcpSocket>
-#include <QCoreApplication>
+#include <QHostAddress>
 
 UBNetwork::UBNetwork(QObject *parent) : QObject(parent),
     m_id(0),
@@ -16,8 +16,6 @@ UBNetwork::UBNetwork(QObject *parent) : QObject(parent),
 
     connect(m_socket, SIGNAL(bytesWritten(qint64)), this, SLOT(dataSentEvent(qint64)));
     connect(m_socket, SIGNAL(connected()), this, SLOT(connectionEvent()));
-    connect(m_socket, SIGNAL(disconnected()), this, SLOT(disconnectEvent()));
-    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(errorEvent(QAbstractSocket::SocketError)));
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(dataReadyEvent()));
 
     m_timer = new QTimer(this);
@@ -29,11 +27,6 @@ UBNetwork::UBNetwork(QObject *parent) : QObject(parent),
 void UBNetwork::startNetwork(quint8 id, quint16 port) {
     m_id = id;
     m_socket->connectToHost(QHostAddress::LocalHost, port);
-}
-
-void UBNetwork::stopNetwork() {
-    m_timer->stop();
-    m_socket->disconnectFromHost();
 }
 
 void UBNetwork::sendData(quint8 desID, const QByteArray& data) {
@@ -104,18 +97,8 @@ void UBNetwork::connectionEvent() {
     QLOG_INFO() << "PHY Connected!";
 }
 
-void UBNetwork::disconnectEvent() {
-    m_timer->stop();
-    QLOG_DEBUG() << "PHY Disconnected!";
-}
-
-void UBNetwork::errorEvent(QAbstractSocket::SocketError) {
-    m_timer->stop();
-   QLOG_ERROR() << "PHY ERROR: " << m_socket->errorString();
-}
-
 void UBNetwork::phyTracker() {
-    if (!m_send_buffer.isEmpty() && !m_size) {
+    if (!m_size && !m_send_buffer.isEmpty()) {
         QByteArray data(*m_send_buffer.first());
         data.append(PACKET_END);
         m_size = data.size();

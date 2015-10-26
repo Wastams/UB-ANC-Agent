@@ -1,9 +1,9 @@
 #ifndef UBNETWORK_H
 #define UBNETWORK_H
 
-#include <QHostAddress>
-#include <QByteArray>
 #include <QQueue>
+#include <QObject>
+#include <QByteArray>
 
 class QTimer;
 class QTcpSocket;
@@ -23,16 +23,12 @@ signals:
 
 public slots:
     void startNetwork(quint8 id, quint16 port);
-    void stopNetwork();
-
     void sendData(quint8 desID, const QByteArray& data);
 
 protected slots:
     void connectionEvent();
-    void disconnectEvent();
     void dataReadyEvent();
     void dataSentEvent(qint64);
-    void errorEvent(QAbstractSocket::SocketError);
 
     void phyTracker();
 

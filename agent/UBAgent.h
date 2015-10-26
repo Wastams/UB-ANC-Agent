@@ -36,8 +36,6 @@ signals:
 
 protected slots:
     void uavCreateEvent(UASInterface *uav);
-    void uavDeleteEvent(UASInterface *uav);
-
     void heartbeatTimeoutEvent(bool timeout, uint ms);
 
     void missionTracker();
