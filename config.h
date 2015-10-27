@@ -13,7 +13,7 @@
 
 #define OBJECTS_PATH "./objects"
 
-#define CONNECT_WAIT 2000
+#define CONNECT_WAIT 3000
 
 #define ENGINE_TRACK_RATE 1000
 #define OBJECT_TRACK_RATE 1000
