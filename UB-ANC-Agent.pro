@@ -8,7 +8,7 @@ QT       += core
 
 QT       -= gui
 
-TARGET = agent
+TARGET = ub-anc-agent
 CONFIG   += console
 CONFIG   -= app_bundle
 
