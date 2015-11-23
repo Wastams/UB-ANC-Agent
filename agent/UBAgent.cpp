@@ -11,10 +11,17 @@
 #include "ArduPilotMegaMAV.h"
 #include "LinkManagerFactory.h"
 
+
+#include <GeographicLib/Geocentric.hpp>
+#include <GeographicLib/LocalCartesian.hpp>
+
+using namespace GeographicLib;
+
 UBAgent::UBAgent(QObject *parent) : QObject(parent),
     m_uav(NULL),
     m_stage(STAGE_START),
-    m_loiter_timer(0)
+    m_loiter_timer(0),
+    m_proj(NULL)
 {
     m_msg.append(MAV_CMD_NAV_TAKEOFF);
 

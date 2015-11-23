@@ -11,6 +11,10 @@ class ArduPilotMegaMAV;
 class UBNetwork;
 class UBVision;
 
+namespace GeographicLib {
+class LocalCartesian;
+}
+
 class UBAgent : public QObject
 {
     Q_OBJECT
@@ -51,6 +55,8 @@ protected:
     QByteArray m_msg;
 
     ArduPilotMegaMAV* m_uav;
+
+    GeographicLib::LocalCartesian* m_proj;
 };
 
 #endif // UBAGENT_H
