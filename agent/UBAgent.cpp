@@ -166,7 +166,7 @@ void UBAgent::stageLoiter() {
     static int timer = 0;
     timer++;
 
-    if (timer > 20)) {
+    if (timer > 20) {
         m_uav->executeCommand(MAV_CMD_NAV_LAND, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         m_stage = STAGE_STOP;
 
