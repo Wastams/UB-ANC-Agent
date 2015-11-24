@@ -124,6 +124,7 @@ void UBAgent::stageStart() {
     }
 
     if (pointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT)) {
+            m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
             m_stage = STAGE_LOITER;
     }
 }
