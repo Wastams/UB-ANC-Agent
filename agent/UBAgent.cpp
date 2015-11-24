@@ -97,11 +97,11 @@ void UBAgent::missionTracker() {
     case STAGE_START:
         stageStart();
         break;
-    case STAGE_LOITER:
-        stageLoiter();
-        break;
     case STAGE_STOP:
         stageStop();
+        break;
+    case STAGE_LOITER:
+        stageLoiter();
         break;
     }
 }
@@ -111,8 +111,7 @@ void UBAgent::stageStart() {
         return;
     }
 
-    if (m_uav->getAltitudeRelative() < ALT_MIN) {
-
+    if (pointZone(m_uav->getLatitude(), m_uav->getLongitude(), 0)) {
         if (m_uav->getSatelliteCount() < GPS_ACCURACY)
             return;
 
@@ -126,15 +125,48 @@ void UBAgent::stageStart() {
 //            return;
 //        }
 
-        m_uav->executeCommand(MAV_CMD_NAV_TAKEOFF, 1, 0, 0, 0, 0, 0, 0, ALT_MAX, 0);
+        m_uav->executeCommand(MAV_CMD_NAV_TAKEOFF, 1, 0, 0, 0, 0, 0, 0, TAKEOFF_ALT, 0);
         return;
     }
 
-    if (m_uav->getAltitudeRelative() > ALT_MAX - ALT_MIN) {
+    if (pointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT)) {
             m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
             m_loiter_timer = QGC::groundTimeSeconds();
             m_stage = STAGE_LOITER;
     }
+}
+
+void UBAgent::stageStop() {
+    if (pointZone(m_uav->getLatitude(), m_uav->getLongitude(), 0)) {
+        if (m_uav->isArmed()) {
+            m_uav->executeCommand(MAV_CMD_COMPONENT_ARM_DISARM, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        } else {
+            QLOG_INFO() << "Mission is done ...";
+            m_stage = STAGE_START;
+        }
+
+        return;
+    }
+
+    m_uav->executeCommand(MAV_CMD_NAV_LAND, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+double UBAgent::distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2) {
+   double x1, x2, y1, y2, z1, z2;
+
+   m_proj->Forward(lat1, lon1, alt1, x1, y1, z1);
+   m_proj->Forward(lat2, lon2, alt2, x2, y2, z2);
+
+   return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2) + pow(z1 - z2, 2));
+}
+
+bool UBAgent::pointZone(double lat, double lon, double alt) {
+    double dist = distance(lat, lon, alt, m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative());
+
+    if (dist < POINT_ZONE)
+        return true;;
+
+    return false;
 }
 
 void UBAgent::stageLoiter() {
@@ -145,27 +177,6 @@ void UBAgent::stageLoiter() {
         return;
     }
 
-    if (m_uav->getAltitudeRelative() > ALT_MAX + ALT_MIN) {
-        m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
-    }
-}
-
-void UBAgent::stageStop() {
     m_net->sendData(2, m_msg);
-
-    if (m_uav->getAltitudeRelative() > ALT_MAX - ALT_MIN) {
-        m_uav->executeCommand(MAV_CMD_NAV_LAND, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        return;
-    }
-
-    if (m_uav->getAltitudeRelative() < ALT_MIN) {
-        if (m_uav->isArmed()) {
-            m_uav->executeCommand(MAV_CMD_COMPONENT_ARM_DISARM, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-            return;
-        } else {
-            QLOG_INFO() << "Mission is done ...";
-
-            m_stage = STAGE_START;
-        }
-    }
+    m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
 }
