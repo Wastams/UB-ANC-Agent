@@ -19,11 +19,8 @@ using namespace GeographicLib;
 UBAgent::UBAgent(QObject *parent) : QObject(parent),
     m_uav(NULL),
     m_stage(STAGE_START),
-    m_loiter_timer(0),
     m_proj(NULL)
 {
-    m_msg.append(MAV_CMD_NAV_TAKEOFF);
-
     m_net = new UBNetwork(this);
     m_sensor = new UBVision(this);
 
@@ -41,12 +38,10 @@ void UBAgent::startAgent() {
         port = QCoreApplication::arguments().at(idx + 1).toInt();
 
     int link = 0;
-
 //    link = LinkManagerFactory::addSerialConnection(SERIAL_PORT, BAUD_RATE);
     link = LinkManagerFactory::addTcpConnection(QHostAddress::LocalHost, "", port, false);
 
     LinkManager::instance()->connectLink(link);
-
     connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(uavCreateEvent(UASInterface*)));
 }
 
@@ -129,8 +124,6 @@ void UBAgent::stageStart() {
     }
 
     if (pointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT)) {
-            m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
-            m_loiter_timer = QGC::groundTimeSeconds();
             m_stage = STAGE_LOITER;
     }
 }
@@ -169,13 +162,19 @@ bool UBAgent::pointZone(double lat, double lon, double alt) {
 }
 
 void UBAgent::stageLoiter() {
-    if ((QGC::groundTimeSeconds() - m_loiter_timer > LOITER_TIME)) {
+    static int timer = 0;
+    timer++;
+
+    if (timer > 20)) {
         m_uav->executeCommand(MAV_CMD_NAV_LAND, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        m_net->sendData(2, m_msg);
         m_stage = STAGE_STOP;
+
         return;
     }
 
-    m_net->sendData(2, m_msg);
+    QByteArray msg;
+    msg.append(MAV_CMD_NAV_TAKEOFF);
+
+    m_net->sendData(2, msg);
     m_uav->executeCommand(MAV_CMD_NAV_LOITER_TIME, 1, LOITER_TIME, 0, 0, 0, 0, 0, 0, 0);
 }
