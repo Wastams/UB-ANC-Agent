@@ -30,8 +30,8 @@
 #define BAUD_RATE 115200
 
 #define GPS_ACCURACY 5
-#define ALT_MIN 1
-#define ALT_MAX 4
+#define POINT_ZONE 1
+#define TAKEOFF_ALT 4
 #define LOITER_TIME 20
 #define MISSION_START_DELAY 10000
 #define MISSION_TRACK_RATE 1000
