@@ -27,13 +27,15 @@ public slots:
 private:
     enum mission_stage {
         STAGE_START,
+        STAGE_STOP,
+
         STAGE_LOITER,
-        STAGE_STOP
     } m_stage;
 
 private:
     void stageStart();
     void stageStop();
+
     void stageLoiter();
 
 signals:
@@ -45,18 +47,19 @@ protected slots:
     void missionTracker();
 
 protected:
-    int m_loiter_timer;
-
     QTimer* m_timer;
+    ArduPilotMegaMAV* m_uav;
+    GeographicLib::LocalCartesian* m_proj;
 
+    QByteArray m_msg;
     UBNetwork* m_net;
     UBVision* m_sensor;
 
-    QByteArray m_msg;
+    int m_loiter_timer;
 
-    ArduPilotMegaMAV* m_uav;
-
-    GeographicLib::LocalCartesian* m_proj;
+protected:
+    double distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2);
+    bool pointZone(double lat, double lon, double alt);
 };
 
 #endif // UBAGENT_H
