@@ -11,7 +11,6 @@
 #include "ArduPilotMegaMAV.h"
 #include "LinkManagerFactory.h"
 
-
 #include <GeographicLib/Geocentric.hpp>
 #include <GeographicLib/LocalCartesian.hpp>
 
