@@ -66,6 +66,8 @@ void UBAgent::uavCreateEvent(UASInterface* uav) {
     m_uav->setHeartbeatEnabled(true);
     connect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
 
+    m_proj = new LocalCartesian(m_uav->getLatitude(), m_uav->getLongitude(), 0, Geocentric::WGS84());
+
 //    QTimer::singleShot(START_DELAY, m_trackTimer, SLOT(start()));
 
     m_timer->start();
@@ -157,7 +159,7 @@ bool UBAgent::pointZone(double lat, double lon, double alt) {
     double dist = distance(lat, lon, alt, m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative());
 
     if (dist < POINT_ZONE)
-        return true;;
+        return true;
 
     return false;
 }
