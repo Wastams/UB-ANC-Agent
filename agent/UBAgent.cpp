@@ -26,7 +26,6 @@ UBAgent::UBAgent(QObject *parent) : QObject(parent),
 
     m_timer = new QTimer(this);
     m_timer->setInterval(MISSION_TRACK_RATE);
-
     connect(m_timer, SIGNAL(timeout()), this, SLOT(missionTracker()));
 }
 
@@ -66,6 +65,7 @@ void UBAgent::uavCreateEvent(UASInterface* uav) {
     m_uav->setHeartbeatEnabled(true);
     connect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
 
+    m_uav->getWaypointManager()->readWaypoints(true);
     m_proj = new LocalCartesian(m_uav->getLatitude(), m_uav->getLongitude(), 0, Geocentric::WGS84());
 
 //    QTimer::singleShot(START_DELAY, m_trackTimer, SLOT(start()));
