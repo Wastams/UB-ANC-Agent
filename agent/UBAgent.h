@@ -51,11 +51,8 @@ protected:
     ArduPilotMegaMAV* m_uav;
     GeographicLib::LocalCartesian* m_proj;
 
-    QByteArray m_msg;
     UBNetwork* m_net;
     UBVision* m_sensor;
-
-    int m_loiter_timer;
 
 protected:
     double distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2);
