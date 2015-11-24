@@ -47,13 +47,30 @@ message("Using mavlink " + $$MAVLINK_CONF)
 include (apm_planner/QsLog/QsLog.pri)
 
 #
-# AGLLIB math library
+# AGLLIB Math Library
 #
 include(apm_planner/libs/alglib/alglib.pri)
 DEFINES += NOMINMAX
 
 INCLUDEPATH += \
     apm_planner/libs/alglib/src \
+
+#
+# OpenPilot GCS Library
+#
+DEFINES += EXTERNAL_USE
+
+INCLUDEPATH += \
+    apm_planner/libs/opmapcontrol/src/internals/projections \
+
+SOURCES += \
+    apm_planner/libs/opmapcontrol/src/core/point.cpp \
+    apm_planner/libs/opmapcontrol/src/core/size.cpp \
+    apm_planner/libs/opmapcontrol/src/internals/pointlatlng.cpp \
+    apm_planner/libs/opmapcontrol/src/internals/pureprojection.cpp \
+    apm_planner/libs/opmapcontrol/src/internals/projections/mercatorprojection.cpp \
+
+INCLUDEPATH += \
     apm_planner/src/ \
     apm_planner/src/comm \
     apm_planner/src/uas \

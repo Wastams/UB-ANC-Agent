@@ -14,8 +14,6 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-unix:!macx: LIBS += -lGeographic
-
 #
 # APM Planner library
 #

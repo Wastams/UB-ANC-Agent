@@ -11,15 +11,11 @@
 #include "ArduPilotMegaMAV.h"
 #include "LinkManagerFactory.h"
 
-#include <GeographicLib/Geocentric.hpp>
-#include <GeographicLib/LocalCartesian.hpp>
-
-using namespace GeographicLib;
+#include "mercatorprojection.h"
 
 UBAgent::UBAgent(QObject *parent) : QObject(parent),
     m_uav(NULL),
-    m_stage(STAGE_START),
-    m_proj(NULL)
+    m_stage(STAGE_START)
 {
     m_net = new UBNetwork(this);
     m_sensor = new UBVision(this);
@@ -66,7 +62,6 @@ void UBAgent::uavCreateEvent(UASInterface* uav) {
     connect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
 
     m_uav->getWaypointManager()->readWaypoints(true);
-    m_proj = new LocalCartesian(m_uav->getLatitude(), m_uav->getLongitude(), 0, Geocentric::WGS84());
 
 //    QTimer::singleShot(START_DELAY, m_trackTimer, SLOT(start()));
 
@@ -149,8 +144,10 @@ void UBAgent::stageStop() {
 double UBAgent::distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2) {
    double x1, x2, y1, y2, z1, z2;
 
-   m_proj->Forward(lat1, lon1, alt1, x1, y1, z1);
-   m_proj->Forward(lat2, lon2, alt2, x2, y2, z2);
+   projections::MercatorProjection proj;
+
+   proj.FromGeodeticToCartesian(lat1, lon1, alt1, x1, y1, z1);
+   proj.FromGeodeticToCartesian(lat2, lon2, alt2, x2, y2, z2);
 
    return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2) + pow(z1 - z2, 2));
 }

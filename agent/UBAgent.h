@@ -11,10 +11,6 @@ class ArduPilotMegaMAV;
 class UBNetwork;
 class UBVision;
 
-namespace GeographicLib {
-class LocalCartesian;
-}
-
 class UBAgent : public QObject
 {
     Q_OBJECT
@@ -49,7 +45,6 @@ protected slots:
 protected:
     QTimer* m_timer;
     ArduPilotMegaMAV* m_uav;
-    GeographicLib::LocalCartesian* m_proj;
 
     UBNetwork* m_net;
     UBVision* m_sensor;
