@@ -151,15 +151,14 @@ bool UBAgent::inPointZone(double lat, double lon, double alt) {
 void UBAgent::stageMission() {
     static int stage = 0;
     static int timer = 0;
+    static double lat, lon;
 
     if (stage == 0) {
         stage++;
 
         double x, y, z;
-        double lat, lon;
 
         projections::MercatorProjection proj;
-
         proj.FromGeodeticToCartesian(m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative(), x, y, z);
         proj.FromCartesianTGeodetic(x + 3, y, z, lat, lon);
 
@@ -178,6 +177,16 @@ void UBAgent::stageMission() {
         wp.setAltitude(m_uav->getAltitudeRelative());
 
         m_uav->getWaypointManager()->goToWaypoint(&wp);
+
+        return;
+    }
+
+    if (stage == 1) {
+        if (inPointZone(lat, lon, m_uav->getAltitudeRelative())) {
+            stage++;
+        }
+
+        return;
     }
 
     if (timer > 20) {
