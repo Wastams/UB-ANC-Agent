@@ -5,7 +5,6 @@
 
 class QTimer;
 
-class Waypoint;
 class UASInterface;
 class ArduPilotMegaMAV;
 
@@ -50,8 +49,6 @@ protected:
 
     UBNetwork* m_net;
     UBVision* m_sensor;
-
-    QList<Waypoint*> m_wps;
 
 protected:
     double distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2);
