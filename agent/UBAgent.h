@@ -5,6 +5,7 @@
 
 class QTimer;
 
+class Waypoint;
 class UASInterface;
 class ArduPilotMegaMAV;
 
@@ -22,24 +23,25 @@ public slots:
 
 private:
     enum mission_stage {
+        STAGE_IDLE,
         STAGE_START,
+        STAGE_MISSION,
         STAGE_STOP,
-
-        STAGE_LOITER,
     } m_stage;
 
 private:
     void stageStart();
+    void stageMission();
     void stageStop();
-
-    void stageLoiter();
 
 signals:
 
 protected slots:
+    void armedEvent();
     void uavCreateEvent(UASInterface *uav);
     void heartbeatTimeoutEvent(bool timeout, uint ms);
 
+    void startMission();
     void missionTracker();
 
 protected:
@@ -49,9 +51,11 @@ protected:
     UBNetwork* m_net;
     UBVision* m_sensor;
 
+    QList<Waypoint*> m_wps;
+
 protected:
     double distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2);
-    bool pointZone(double lat, double lon, double alt);
+    bool inPointZone(double lat, double lon, double alt);
 };
 
 #endif // UBAGENT_H
