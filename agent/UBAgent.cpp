@@ -59,11 +59,7 @@ void UBAgent::uavCreateEvent(UASInterface* uav) {
     m_sensor->startSensor((SNR_PORT - MAV_PORT) + port);
 
     m_uav->setHeartbeatEnabled(true);
-    m_uav->getWaypointManager()->readWaypoints(true);
-    m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::GUIDED);
-
     connect(m_uav, SIGNAL(armed()), this, SLOT(armedEvent()));
-    connect(m_uav, SIGNAL(heartbeatTimeout(bool,uint)), this, SLOT(heartbeatTimeoutEvent(bool,uint)));
 
 //    QTimer::singleShot(START_DELAY, this, SLOT(startMission()));
 
@@ -105,13 +101,6 @@ void UBAgent::startMission() {
 
 void UBAgent::armedEvent() {
     startMission();
-}
-
-void UBAgent::heartbeatTimeoutEvent(bool timeout, uint ms) {
-    if (timeout)
-        QLOG_WARN() << "UAV connection lost! Millisecond: " << ms;
-    else
-        QLOG_INFO() << "UAV reconnected!";
 }
 
 void UBAgent::stageStart() {
