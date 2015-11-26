@@ -21,25 +21,40 @@ public slots:
     void startAgent();
 
 private:
-    enum mission_stage {
+    enum EMissionStage {
         STAGE_IDLE,
-        STAGE_START,
+        STAGE_BEGIN,
         STAGE_MISSION,
-        STAGE_STOP,
-    } m_stage;
+        STAGE_END,
+    } m_mission_stage;
+
+    struct SMissionData {
+        int stage;
+        int timer;
+
+        void reset() {
+            stage = 0;
+            timer = 0;
+        }
+    } m_mission_data;
 
 private:
-    void stageStart();
+    void stageBegin();
     void stageMission();
-    void stageStop();
+    void stageEnd();
 
 signals:
 
 protected slots:
     void armedEvent();
+    void disarmedEvent();
+
     void UASCreatedEvent(UASInterface *uav);
+    void navModeChangedEvent(int uasID, int mode);
 
     void startMission();
+    void stopMission();
+
     void missionTracker();
 
 protected:
