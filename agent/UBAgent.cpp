@@ -82,6 +82,9 @@ void UBAgent::navModeChangedEvent(int uasID, int mode) {
     if (mode == ApmCopter::GUIDED)
         return;
 
+    if (m_mission_stage == STAGE_MISSION)
+        QLOG_INFO() << "Mission Interrupted!";
+
     stopMission();
 }
 
