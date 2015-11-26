@@ -15,7 +15,7 @@
 
 UBAgent::UBAgent(QObject *parent) : QObject(parent),
     m_uav(NULL),
-    m_stage(STAGE_IDLE)
+    m_mission_stage(STAGE_IDLE)
 {
     m_net = new UBNetwork(this);
     m_sensor = new UBVision(this);
@@ -49,6 +49,12 @@ void UBAgent::UASCreatedEvent(UASInterface* uav) {
     if (!m_uav)
         return;
 
+    m_uav->setHeartbeatEnabled(true);
+
+    connect(m_uav, SIGNAL(armed()), this, SLOT(armedEvent()));
+    connect(m_uav, SIGNAL(disarmed()), this, SLOT(disarmedEvent()));
+    connect(m_uav, SIGNAL(navModeChanged(int,int,QString)), this, SLOT(navModeChangedEvent(int,int)));
+
     int port = MAV_PORT;
 
     int idx = QCoreApplication::arguments().indexOf("--port");
@@ -58,64 +64,25 @@ void UBAgent::UASCreatedEvent(UASInterface* uav) {
     m_net->startNetwork(m_uav->getUASID(), (PHY_PORT - MAV_PORT) + port);
     m_sensor->startSensor((SNR_PORT - MAV_PORT) + port);
 
-    m_uav->setHeartbeatEnabled(true);
-    connect(m_uav, SIGNAL(armed()), this, SLOT(armedEvent()));
-
 //    QTimer::singleShot(START_DELAY, this, SLOT(startMission()));
-
-    m_timer->start();
-}
-
-void UBAgent::missionTracker() {
-//    if (m_start_time < START_DELAY) {
-//        m_start_time++;
-//        return;
-//    }
-
-    switch (m_stage) {
-    case STAGE_START:
-        stageStart();
-        break;
-    case STAGE_MISSION:
-        stageMission();
-        break;
-    case STAGE_STOP:
-        stageStop();
-        break;
-    default:
-        break;
-    }
-}
-
-void UBAgent::startMission() {
-    if (m_uav->getSatelliteCount() < GPS_ACCURACY)
-        return;
-
-//    m_uav->executeCommand(MAV_CMD_MISSION_START, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-
-    if (m_uav->getCustomMode() != ApmCopter::GUIDED)
-        m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::GUIDED);
-
-    m_uav->executeCommand(MAV_CMD_NAV_TAKEOFF, 1, 0, 0, 0, 0, 0, 0, TAKEOFF_ALT, 0);
-
-    m_stage = STAGE_START;
 }
 
 void UBAgent::armedEvent() {
     startMission();
 }
 
-void UBAgent::stageStart() {
-    if (inPointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT))
-        m_stage = STAGE_MISSION;
+void UBAgent::disarmedEvent() {
+    stopMission();
 }
 
-void UBAgent::stageStop() {
-    if (inPointZone(m_uav->getLatitude(), m_uav->getLongitude(), 0)) {
-        m_stage = STAGE_IDLE;
+void UBAgent::navModeChangedEvent(int uasID, int mode) {
+    if (uasID != m_uav->getUASID())
+        return;
 
-        QLOG_INFO() << "Mission is done ...";
-    }
+    if (mode == ApmCopter::GUIDED)
+        return;
+
+    stopMission();
 }
 
 double UBAgent::distance(double lat1, double lon1, double alt1, double lat2, double lon2, double alt2) {
@@ -139,13 +106,75 @@ bool UBAgent::inPointZone(double lat, double lon, double alt) {
     return false;
 }
 
+void UBAgent::startMission() {
+    if (m_uav->getSatelliteCount() < GPS_ACCURACY)
+        return;
+
+    if (!inPointZone(m_uav->getLatitude(), m_uav->getLongitude(), 0))
+        return;
+
+    if (m_uav->getCustomMode() != ApmCopter::GUIDED)
+        m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::GUIDED);
+
+//    m_uav->executeCommand(MAV_CMD_MISSION_START, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    m_uav->executeCommand(MAV_CMD_NAV_TAKEOFF, 1, 0, 0, 0, 0, 0, 0, TAKEOFF_ALT, 0);
+    m_uav->getWaypointManager()->readWaypoints(true);
+
+    m_mission_data.reset();
+
+    m_mission_stage = STAGE_BEGIN;
+    m_timer->start();
+}
+
+void UBAgent::stopMission() {
+    m_mission_data.reset();
+
+    m_mission_stage = STAGE_IDLE;
+    m_timer->stop();
+}
+
+void UBAgent::missionTracker() {
+//    if (m_start_time < START_DELAY) {
+//        m_start_time++;
+//        return;
+//    }
+
+    switch (m_mission_stage) {
+    case STAGE_BEGIN:
+        stageBegin();
+        break;
+    case STAGE_MISSION:
+        stageMission();
+        break;
+    case STAGE_END:
+        stageEnd();
+        break;
+    default:
+        break;
+    }
+}
+
+void UBAgent::stageBegin() {
+    if (inPointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT)) {
+        m_mission_stage = STAGE_MISSION;
+
+        QLOG_INFO() << "Mission is started ...";
+    }
+}
+
+void UBAgent::stageEnd() {
+//    m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::RTL);
+    m_uav->land();
+
+    QLOG_INFO() << "Mission is done ...";
+}
+
 void UBAgent::stageMission() {
-    static int stage = 0;
-    static int timer = 0;
     static double lat, lon;
 
-    if (stage == 0) {
-        stage++;
+    if (m_mission_data.stage == 0) {
+        m_mission_data.stage++;
 
         double x, y, z;
 
@@ -155,14 +184,14 @@ void UBAgent::stageMission() {
 
         Waypoint wp;
         wp.setFrame(MAV_FRAME_GLOBAL_RELATIVE_ALT);
-    //    wp.setAction(MAV_CMD_NAV_WAYPOINT);
-    //    wp.setParam1(0);
-    //    wp.setParam2(POINT_ZONE);
-    //    wp.setParam3(POINT_ZONE);
-    //    wp.setParam4(0);
-    //    wp.setParam5(m_uav->getLatitude());
-    //    wp.setParam6(m_uav->getLongitude());
-    //    wp.setParam7(TAKEOFF_ALT);
+//        wp.setAction(MAV_CMD_NAV_WAYPOINT);
+//        wp.setParam1(0);
+//        wp.setParam2(POINT_ZONE);
+//        wp.setParam3(POINT_ZONE);
+//        wp.setParam4(0);
+//        wp.setParam5(m_uav->getLatitude());
+//        wp.setParam6(m_uav->getLongitude());
+//        wp.setParam7(TAKEOFF_ALT);
         wp.setLatitude(lat);
         wp.setLongitude(lon);
         wp.setAltitude(m_uav->getAltitudeRelative());
@@ -172,23 +201,18 @@ void UBAgent::stageMission() {
         return;
     }
 
-    if (stage == 1) {
+    if (m_mission_data.stage == 1) {
         if (inPointZone(lat, lon, m_uav->getAltitudeRelative())) {
-            stage++;
+            m_mission_data.stage++;
         }
 
         return;
     }
 
-    if (timer > 20) {
-        m_uav->land();
-
-        stage = 0;
-        timer = 0;
-
-        m_stage = STAGE_STOP;
+    if (m_mission_data.timer > 20) {
+        m_mission_stage = STAGE_END;
     } else {
-        timer++;
+        m_mission_data.timer++;
 
         m_net->sendData(2, QByteArray(1, MAV_CMD_NAV_TAKEOFF));
     }
