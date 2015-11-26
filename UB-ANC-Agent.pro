@@ -15,7 +15,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 #
-# APM Planner library
+# APM Planner Library
 #
 include(apm_planner.pri)
 
@@ -29,10 +29,10 @@ HEADERS += \
     network/UBNetwork.h \
     network/UBPacket.h \
     sensor/UBVision.h \
-    config.h
+    config.h \
 
 SOURCES += \
     agent/UBAgent.cpp \
     network/UBNetwork.cpp \
     network/UBPacket.cpp \
-    sensor/UBVision.cpp
+    sensor/UBVision.cpp \
