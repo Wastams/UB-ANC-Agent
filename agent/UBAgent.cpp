@@ -91,6 +91,8 @@ void UBAgent::startMission() {
     if (m_uav->getSatelliteCount() < GPS_ACCURACY)
         return;
 
+//    m_uav->executeCommand(MAV_CMD_MISSION_START, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+
     if (m_uav->getCustomMode() != ApmCopter::GUIDED)
         m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::GUIDED);
 
