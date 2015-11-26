@@ -37,7 +37,7 @@ signals:
 
 protected slots:
     void armedEvent();
-    void uavCreateEvent(UASInterface *uav);
+    void UASCreatedEvent(UASInterface *uav);
 
     void startMission();
     void missionTracker();
