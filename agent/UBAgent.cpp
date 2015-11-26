@@ -37,10 +37,10 @@ void UBAgent::startAgent() {
     link = LinkManagerFactory::addTcpConnection(QHostAddress::LocalHost, "", port, false);
 
     LinkManager::instance()->connectLink(link);
-    connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(uavCreateEvent(UASInterface*)));
+    connect(UASManager::instance(), SIGNAL(UASCreated(UASInterface*)), this, SLOT(UASCreatedEvent(UASInterface*)));
 }
 
-void UBAgent::uavCreateEvent(UASInterface* uav) {
+void UBAgent::UASCreatedEvent(UASInterface* uav) {
     if (m_uav)
         return;
 
