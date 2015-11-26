@@ -159,7 +159,7 @@ void UBAgent::stageBegin() {
     if (inPointZone(m_uav->getLatitude(), m_uav->getLongitude(), TAKEOFF_ALT)) {
         m_mission_stage = STAGE_MISSION;
 
-        QLOG_INFO() << "Mission is started ...";
+        QLOG_INFO() << "Mission Begin";
     }
 }
 
@@ -167,7 +167,7 @@ void UBAgent::stageEnd() {
 //    m_uav->setMode(MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, ApmCopter::RTL);
     m_uav->land();
 
-    QLOG_INFO() << "Mission is done ...";
+    QLOG_INFO() << "Mission End";
 }
 
 void UBAgent::stageMission() {
