@@ -183,7 +183,7 @@ void UBAgent::stageMission() {
 
         projections::MercatorProjection proj;
 //        proj.FromGeodeticToCartesian(m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative(), x, y, z);
-//        proj.FromCartesianTGeodetic(x + 5, y, z, lat, lon);
+//        proj.FromCartesianTGeodetic(x + 10, y, z, lat, lon);
         double res = proj.GetGroundResolution(15, m_uav->getLatitude());
         core::Point pix = proj.FromLatLngToPixel(m_uav->getLatitude(), m_uav->getLongitude(), 15);
         internals::PointLatLng pll = proj.FromPixelToLatLng(pix.X() + 10 / res, pix.Y(), 15);
