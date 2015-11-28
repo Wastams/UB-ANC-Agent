@@ -227,6 +227,6 @@ void UBAgent::stageMission() {
     } else {
         m_mission_data.tick++;
 
-        m_net->sendData(2, QByteArray(1, MAV_CMD_NAV_TAKEOFF));
+        m_net->sendData(m_uav->getUASID() + 1, QByteArray(1, MAV_CMD_NAV_TAKEOFF));
     }
 }
