@@ -30,11 +30,11 @@ private:
 
     struct SMissionData {
         int stage;
-        int timer;
+        int tick;
 
         void reset() {
             stage = 0;
-            timer = 0;
+            tick = 0;
         }
     } m_mission_data;
 
