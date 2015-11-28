@@ -39,17 +39,27 @@ void UBNetwork::sendData(quint8 desID, const QByteArray& data) {
     QByteArray* stream = new QByteArray(packet.packetize());
 
     m_send_buffer.enqueue(stream);
+
+    if (m_size)
+        return;
+
+    QByteArray _data(*m_send_buffer.first());
+    _data.append(PACKET_END);
+    m_size = _data.size();
+
+    m_socket->write(_data);
 }
 
 QByteArray UBNetwork::getData() {
     QByteArray data;
 
-    if (!m_receive_buffer.isEmpty()) {
-        QByteArray* stream = m_receive_buffer.dequeue();
+    if (m_receive_buffer.isEmpty())
+        return data;
 
-        data = *stream;
-        delete stream;
-    }
+    QByteArray* stream = m_receive_buffer.dequeue();
+    data = *stream;
+
+    delete stream;
 
     return data;
 }
@@ -57,17 +67,26 @@ QByteArray UBNetwork::getData() {
 void UBNetwork::dataSentEvent(qint64 size) {
     m_size -= size;
 
-    if (!m_size) {
-        QByteArray* stream = m_send_buffer.dequeue();
+    if (m_size)
+        return;
 
-        UBPacket packet;
-        packet.depacketize(*stream);
+    QByteArray* stream = m_send_buffer.dequeue();
 
-        QLOG_INFO() << "Packet Sent | From " << packet.getSrcID() << " to " << packet.getDesID() << " | Size: " << packet.getPayload().size();
+    UBPacket packet;
+    packet.depacketize(*stream);
 
-        m_size = 0;
-        delete stream;
-    }
+    QLOG_INFO() << "Packet Sent | From " << packet.getSrcID() << " to " << packet.getDesID() << " | Size: " << packet.getPayload().size();
+
+    delete stream;
+
+    if (m_send_buffer.isEmpty())
+        return;
+
+    QByteArray data(*m_send_buffer.first());
+    data.append(PACKET_END);
+    m_size = data.size();
+
+    m_socket->write(data);
 }
 
 void UBNetwork::dataReadyEvent() {
@@ -98,11 +117,4 @@ void UBNetwork::connectionEvent() {
 }
 
 void UBNetwork::phyTracker() {
-    if (!m_size && !m_send_buffer.isEmpty()) {
-        QByteArray data(*m_send_buffer.first());
-        data.append(PACKET_END);
-        m_size = data.size();
-
-        m_socket->write(data);
-    }
 }
