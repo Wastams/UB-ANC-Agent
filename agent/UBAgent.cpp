@@ -222,10 +222,10 @@ void UBAgent::stageMission() {
         return;
     }
 
-    if (m_mission_data.timer > 20) {
+    if (m_mission_data.tick > 20) {
         m_mission_stage = STAGE_END;
     } else {
-        m_mission_data.timer++;
+        m_mission_data.tick++;
 
         m_net->sendData(2, QByteArray(1, MAV_CMD_NAV_TAKEOFF));
     }
