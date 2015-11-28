@@ -179,14 +179,21 @@ void UBAgent::stageMission() {
     if (m_mission_data.stage == 0) {
         m_mission_data.stage++;
 
-        double x, y, z;
+//        double x, y, z;
 
         projections::MercatorProjection proj;
-        proj.FromGeodeticToCartesian(m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative(), x, y, z);
-        proj.FromCartesianTGeodetic(x + 3, y, z, lat, lon);
+//        proj.FromGeodeticToCartesian(m_uav->getLatitude(), m_uav->getLongitude(), m_uav->getAltitudeRelative(), x, y, z);
+//        proj.FromCartesianTGeodetic(x + 5, y, z, lat, lon);
+        double res = proj.GetGroundResolution(15, m_uav->getLatitude());
+        core::Point pix = proj.FromLatLngToPixel(m_uav->getLatitude(), m_uav->getLongitude(), 15);
+        internals::PointLatLng pll = proj.FromPixelToLatLng(pix.X() + 10 / res, pix.Y(), 15);
+
+        lat = pll.Lat();
+        lon = pll.Lng();
 
         Waypoint wp;
         wp.setFrame(MAV_FRAME_GLOBAL_RELATIVE_ALT);
+//        wp.setFrame(MAV_FRAME_GLOBAL_LOCAL_NED);
 //        wp.setAction(MAV_CMD_NAV_WAYPOINT);
 //        wp.setParam1(0);
 //        wp.setParam2(POINT_ZONE);
@@ -195,6 +202,9 @@ void UBAgent::stageMission() {
 //        wp.setParam5(m_uav->getLatitude());
 //        wp.setParam6(m_uav->getLongitude());
 //        wp.setParam7(TAKEOFF_ALT);
+//        wp.setParam5(m_uav->getLocalX() + 10);
+//        wp.setParam6(m_uav->getLocalY());
+//        wp.setParam7(m_uav->getLocalZ());
         wp.setLatitude(lat);
         wp.setLongitude(lon);
         wp.setAltitude(m_uav->getAltitudeRelative());
