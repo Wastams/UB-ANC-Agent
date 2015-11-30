@@ -13,8 +13,6 @@
 
 #define OBJECTS_PATH "./objects"
 
-#define CONNECT_WAIT 3000
-
 #define ENGINE_TRACK_RATE 1000
 #define OBJECT_TRACK_RATE 1000
 #define SERVER_TRACK_RATE 1000
@@ -31,7 +29,7 @@
 
 #define GPS_ACCURACY 5
 #define POINT_ZONE 1
-#define TAKEOFF_ALT 4
+#define TAKEOFF_ALT 5
 #define MISSION_START_DELAY 10000
 #define MISSION_TRACK_RATE 1000
 
