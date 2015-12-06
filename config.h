@@ -27,6 +27,8 @@
 #define SERIAL_PORT "ttyACM0"
 #define BAUD_RATE 115200
 
+#define GND_RES 17
+
 #define GPS_ACCURACY 5
 #define POINT_ZONE 1
 #define TAKEOFF_ALT 5
