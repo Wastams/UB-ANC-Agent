@@ -102,7 +102,7 @@ void UBAgent::navModeChangedEvent(int uasID, int mode) {
 
     if (m_mission_stage != STAGE_IDLE) {
         m_mission_stage = STAGE_IDLE;
-        QLOG_INFO() << "Mission Interrupted!";
+        QLOG_WARN() << "Mission Interrupted!";
     }
 }
 
